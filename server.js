@@ -13,6 +13,7 @@ const organizerRoutes = require('./routes/organizer');
 const eventRoutes = require('./routes/event');
 const authRoutes = require('./routes/auth');
 const uploadRoutes = require('./routes/upload');
+const bannerRoutes = require('./routes/banner');
 
 // Import middleware
 const errorHandler = require('./middleware/errorHandler');
@@ -38,8 +39,8 @@ app.use(cors({
   origin: [
     'http://localhost:3000',
     'http://localhost:19006',
-    'https://eventback-78o6.onrender.com',
-    'https://eventback-78o6.onrender.com/api'
+    'https://eventoback-1.onrender.com',
+    'https://eventoback-1.onrender.com/api'
 
     // Add your production frontend URL here, e.g. 'https://your-frontend-domain.com'
     // Remove all unnecessary origins for production
@@ -70,6 +71,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/organizers', organizerRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/banners', bannerRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
