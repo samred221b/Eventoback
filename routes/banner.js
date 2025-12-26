@@ -19,6 +19,19 @@ router.get('/', async (req, res) => {
   }
 });
 
+// @route   GET /api/banners/all
+// @desc    Get all banners (active and inactive) sorted by order for management
+// @access  Private (auth required)
+router.get('/all', authenticateToken, async (req, res) => {
+  try {
+    const banners = await Banner.find({}).sort({ order: 1, createdAt: -1 });
+    res.json({ success: true, data: banners });
+  } catch (error) {
+    console.error('Get all banners error:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch all banners', message: error.message });
+  }
+});
+
 // @route   POST /api/banners
 // @desc    Create a new banner
 // @access  Private (auth required)
