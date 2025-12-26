@@ -1,5 +1,6 @@
 const express = require('express');
 const { authenticateToken, optionalAuth } = require('../middleware/auth');
+const { optionalAdmin } = require('../middleware/admin');
 const { validate, organizerSchemas } = require('../middleware/validation');
 const Organizer = require('../models/Organizer');
 const Event = require('../models/Event');
@@ -336,6 +337,102 @@ router.delete('/profile', authenticateToken, async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to deactivate account',
+      message: error.message
+    });
+  }
+});
+
+// @route   GET /api/organizers/:id/admin-details
+// @desc    Get organizer details with admin information (admin only)
+// @access  Admin only
+router.get('/:id/admin-details', authenticateToken, optionalAdmin, async (req, res) => {
+  try {
+    // Only admin can access this endpoint
+    if (!req.isAdmin) {
+      return res.status(403).json({
+        success: false,
+        error: 'Access denied',
+        message: 'Admin privileges required'
+      });
+    }
+
+    const organizer = await Organizer.findById(req.params.id)
+      .select('-firebaseUid')
+      .populate({
+        path: 'events',
+        select: 'title date location category image status attendeeCount',
+        options: { sort: { date: -1 }, limit: 20 }
+      });
+
+    if (!organizer) {
+      return res.status(404).json({
+        success: false,
+        error: 'Organizer not found'
+      });
+    }
+
+    // Get detailed statistics
+    const [
+      totalEvents,
+      activeEvents,
+      pastEvents,
+      cancelledEvents,
+      totalAttendees,
+      totalViews,
+      totalLikes
+    ] = await Promise.all([
+      Event.countDocuments({ organizerId: organizer._id }),
+      Event.countDocuments({ 
+        organizerId: organizer._id, 
+        status: 'published',
+        date: { $gte: new Date() }
+      }),
+      Event.countDocuments({ 
+        organizerId: organizer._id, 
+        status: 'published',
+        date: { $lt: new Date() }
+      }),
+      Event.countDocuments({ 
+        organizerId: organizer._id, 
+        status: 'cancelled'
+      }),
+      Event.aggregate([
+        { $match: { organizerId: organizer._id } },
+        { $project: { attendeeCount: { $size: '$attendees' } } },
+        { $group: { _id: null, total: { $sum: '$attendeeCount' } } }
+      ]),
+      Event.aggregate([
+        { $match: { organizerId: organizer._id } },
+        { $group: { _id: null, total: { $sum: '$views' } } }
+      ]),
+      Event.aggregate([
+        { $match: { organizerId: organizer._id } },
+        { $project: { likeCount: { $size: '$likes' } } },
+        { $group: { _id: null, total: { $sum: '$likeCount' } } }
+      ])
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        ...organizer.toJSON(),
+        adminStats: {
+          totalEvents,
+          activeEvents,
+          pastEvents,
+          cancelledEvents,
+          totalAttendees: totalAttendees[0]?.total || 0,
+          totalViews: totalViews[0]?.total || 0,
+          totalLikes: totalLikes[0]?.total || 0
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Get organizer admin details error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch organizer details',
       message: error.message
     });
   }

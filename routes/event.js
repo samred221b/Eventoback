@@ -1,5 +1,6 @@
 const express = require('express');
 const { authenticateToken, optionalAuth } = require('../middleware/auth');
+const { optionalAdmin } = require('../middleware/admin');
 const { validate, eventSchemas } = require('../middleware/validation');
 const Event = require('../models/Event');
 const Organizer = require('../models/Organizer');
@@ -329,6 +330,7 @@ router.post('/',
 // @access  Private
 router.put('/:id', 
   authenticateToken, 
+  optionalAdmin,
   validate(eventSchemas.update), 
   async (req, res) => {
     try {
@@ -341,9 +343,12 @@ router.put('/:id',
         });
       }
 
-      // Check if user is the organizer
+      // Check if user is the organizer OR admin
       const organizer = await Organizer.findByFirebaseUid(req.user.uid);
-      if (!organizer || !event.organizerId.equals(organizer._id)) {
+      const isOwner = organizer && event.organizerId.equals(organizer._id);
+      const isAdmin = req.isAdmin;
+
+      if (!isOwner && !isAdmin) {
         return res.status(403).json({
           success: false,
           error: 'Access denied',
@@ -377,7 +382,7 @@ router.put('/:id',
 // @route   DELETE /api/events/:id
 // @desc    Delete event
 // @access  Private
-router.delete('/:id', authenticateToken, async (req, res) => {
+router.delete('/:id', authenticateToken, optionalAdmin, async (req, res) => {
   try {
     const event = await Event.findById(req.params.id);
 
@@ -388,9 +393,12 @@ router.delete('/:id', authenticateToken, async (req, res) => {
       });
     }
 
-    // Check if user is the organizer
+    // Check if user is the organizer OR admin
     const organizer = await Organizer.findByFirebaseUid(req.user.uid);
-    if (!organizer || !event.organizerId.equals(organizer._id)) {
+    const isOwner = organizer && event.organizerId.equals(organizer._id);
+    const isAdmin = req.isAdmin;
+
+    if (!isOwner && !isAdmin) {
       return res.status(403).json({
         success: false,
         error: 'Access denied',
@@ -401,8 +409,16 @@ router.delete('/:id', authenticateToken, async (req, res) => {
     await Event.findByIdAndDelete(req.params.id);
 
     // Update organizer's total events count
-    organizer.totalEvents = Math.max(0, organizer.totalEvents - 1);
-    await organizer.save();
+    if (isOwner) {
+      organizer.totalEvents = Math.max(0, organizer.totalEvents - 1);
+      await organizer.save();
+    } else if (isAdmin) {
+      // If admin deleted, update the original organizer's count
+      await Organizer.findByIdAndUpdate(
+        event.organizerId,
+        { $inc: { totalEvents: -1 } }
+      );
+    }
 
     res.json({
       success: true,
