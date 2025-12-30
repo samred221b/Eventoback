@@ -162,6 +162,14 @@ router.put('/profile',
       Object.assign(organizer, updates);
       await organizer.save();
 
+      // Update all events for this organizer with the new name
+      if (updates.name) {
+        await Event.updateMany(
+          { organizerId: organizer._id },
+          { organizerName: updates.name }
+        );
+      }
+
       res.json({
         success: true,
         message: 'Profile updated successfully',

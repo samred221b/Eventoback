@@ -295,7 +295,8 @@ router.post('/',
 
       const eventData = {
         ...req.body,
-        organizerId: organizer._id
+        organizerId: organizer._id,
+        organizerName: organizer.name // Automatically set from organizer profile
       };
 
       const event = new Event(eventData);
@@ -358,6 +359,12 @@ router.put('/:id',
 
       // Update event
       Object.assign(event, req.body);
+      
+      // Always ensure organizerName matches the current organizer profile
+      if (organizer) {
+        event.organizerName = organizer.name;
+      }
+      
       await event.save();
 
       await event.populate('organizerId', 'name profileImage isVerified');
