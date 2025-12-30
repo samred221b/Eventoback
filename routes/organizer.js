@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const { authenticateToken, optionalAuth } = require('../middleware/auth');
 const { optionalAdmin } = require('../middleware/admin');
 const { validate, organizerSchemas } = require('../middleware/validation');
@@ -123,7 +124,7 @@ router.put('/profile',
         });
       }
 
-      // Update allowed fields
+      // Update allowed fields (email is not updatable - comes from Firebase)
       const updates = {};
 
       // Basic fields
@@ -133,6 +134,9 @@ router.put('/profile',
       if (req.body.profileImage !== undefined) updates.profileImage = req.body.profileImage;
       if (req.body.organization !== undefined) updates.organization = req.body.organization;
       if (req.body.website !== undefined) updates.website = req.body.website;
+      
+      // Explicitly ignore email field - it's managed by Firebase
+      delete req.body.email;
 
       // Handle nested location updates
       if (req.body.address !== undefined || req.body.city !== undefined || req.body.country !== undefined) {
@@ -312,6 +316,79 @@ router.get('/profile/events', authenticateToken, async (req, res) => {
       success: false,
       error: 'Failed to fetch events',
       message: error.message
+    });
+  }
+});
+
+// @route   DELETE /api/organizers/account
+// @desc    Delete organizer account and all associated data
+// @access  Private
+router.delete('/account', authenticateToken, async (req, res) => {
+  try {
+    const organizer = await Organizer.findByFirebaseUid(req.user.uid);
+
+    if (!organizer) {
+      return res.status(404).json({
+        success: false,
+        error: 'Organizer not found'
+      });
+    }
+
+    // Start a session for transaction
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+      // 1. Cancel all upcoming events for this organizer
+      await Event.updateMany(
+        { 
+          organizerId: organizer._id,
+          date: { $gte: new Date() },
+          status: { $ne: 'cancelled' }
+        },
+        { 
+          status: 'cancelled',
+          cancellationReason: 'Organizer account deleted'
+        },
+        { session }
+      );
+
+      // 2. Remove organizer from all events (as a reference)
+      await Event.updateMany(
+        { organizerId: organizer._id },
+        { $unset: { organizerId: 1 } },
+        { session }
+      );
+
+      // 3. Delete the organizer document
+      await Organizer.findByIdAndDelete(organizer._id, { session });
+
+      // 4. Delete Firebase user (optional - you might want to keep Firebase user for recovery)
+      // This would require Firebase Admin SDK
+      // await admin.auth().deleteUser(organizer.firebaseUid);
+
+      // Commit the transaction
+      await session.commitTransaction();
+
+      res.json({
+        success: true,
+        message: 'Account and all associated data deleted successfully'
+      });
+
+    } catch (transactionError) {
+      // Abort transaction on error
+      await session.abortTransaction();
+      throw transactionError;
+    } finally {
+      // End session
+      session.endSession();
+    }
+
+  } catch (error) {
+    logger.error('Delete organizer account error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete account'
     });
   }
 });

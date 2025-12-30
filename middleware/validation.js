@@ -43,11 +43,11 @@ const organizerSchemas = {
     phone: Joi.string().pattern(/^[\+]?[1-9][\d]{0,15}$/).optional(),
     profileImage: Joi.string().uri().optional(),
     organization: Joi.string().max(100).optional(),
-    website: Joi.string().uri().optional(),
+    website: Joi.string().uri().optional().allow(''),
     // Accept individual location fields for easier frontend integration
-    address: Joi.string().max(200).optional(),
-    city: Joi.string().max(50).optional(),
-    country: Joi.string().max(50).optional(),
+    address: Joi.string().max(200).optional().allow(''),
+    city: Joi.string().max(50).optional().allow(''),
+    country: Joi.string().max(50).optional().allow(''),
     // Also accept nested location object for backward compatibility
     location: Joi.object({
       address: Joi.string().max(200).optional(),
@@ -58,7 +58,7 @@ const organizerSchemas = {
         lng: Joi.number().min(-180).max(180).optional()
       }).optional()
     }).optional()
-  })
+  }).unknown(true) // Allow unknown fields to prevent validation errors
 };
 
 // Event validation schemas

@@ -43,9 +43,9 @@ const organizerSchema = new mongoose.Schema({
     trim: true,
     validate: {
       validator: function(v) {
-        return !v || /^https?:\/\/.+/.test(v);
+        return !v || /^https?:\/\/.+\..+/.test(v);
       },
-      message: 'Invalid website URL'
+      message: 'Invalid website URL format'
     }
   },
   
