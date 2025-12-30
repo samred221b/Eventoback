@@ -31,6 +31,24 @@ const organizerSchema = new mongoose.Schema({
     trim: true
   },
   
+  // Business Information
+  organization: {
+    type: String,
+    maxlength: 100,
+    trim: true
+  },
+  
+  website: {
+    type: String,
+    trim: true,
+    validate: {
+      validator: function(v) {
+        return !v || /^https?:\/\/.+/.test(v);
+      },
+      message: 'Invalid website URL'
+    }
+  },
+  
   phone: {
     type: String,
     trim: true,

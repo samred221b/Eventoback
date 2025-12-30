@@ -41,6 +41,14 @@ const organizerSchemas = {
     name: Joi.string().min(2).max(100).optional(),
     bio: Joi.string().max(500).optional(),
     phone: Joi.string().pattern(/^[\+]?[1-9][\d]{0,15}$/).optional(),
+    profileImage: Joi.string().uri().optional(),
+    organization: Joi.string().max(100).optional(),
+    website: Joi.string().uri().optional(),
+    // Accept individual location fields for easier frontend integration
+    address: Joi.string().max(200).optional(),
+    city: Joi.string().max(50).optional(),
+    country: Joi.string().max(50).optional(),
+    // Also accept nested location object for backward compatibility
     location: Joi.object({
       address: Joi.string().max(200).optional(),
       city: Joi.string().max(50).optional(),

@@ -124,14 +124,28 @@ router.put('/profile',
       }
 
       // Update allowed fields
-      const allowedUpdates = ['name', 'bio', 'phone', 'location', 'profileImage', 'socialLinks'];
       const updates = {};
 
-      allowedUpdates.forEach(field => {
-        if (req.body[field] !== undefined) {
-          updates[field] = req.body[field];
-        }
-      });
+      // Basic fields
+      if (req.body.name !== undefined) updates.name = req.body.name;
+      if (req.body.bio !== undefined) updates.bio = req.body.bio;
+      if (req.body.phone !== undefined) updates.phone = req.body.phone;
+      if (req.body.profileImage !== undefined) updates.profileImage = req.body.profileImage;
+      if (req.body.organization !== undefined) updates.organization = req.body.organization;
+      if (req.body.website !== undefined) updates.website = req.body.website;
+
+      // Handle nested location updates
+      if (req.body.address !== undefined || req.body.city !== undefined || req.body.country !== undefined) {
+        updates.location = organizer.location || {};
+        if (req.body.address !== undefined) updates.location.address = req.body.address;
+        if (req.body.city !== undefined) updates.location.city = req.body.city;
+        if (req.body.country !== undefined) updates.location.country = req.body.country;
+      }
+      
+      // Handle nested location object if sent
+      if (req.body.location) {
+        updates.location = { ...organizer.location, ...req.body.location };
+      }
 
       Object.assign(organizer, updates);
       await organizer.save();
