@@ -68,7 +68,18 @@ router.get('/', optionalAuth, async (req, res) => {
 // @access  Public
 router.get('/:id', optionalAuth, async (req, res) => {
   try {
-    const organizer = await Organizer.findById(req.params.id)
+    // Validate ObjectId format
+    const { id } = req.params;
+    if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid organizer ID format'
+      });
+    }
+
+    console.log('Fetching organizer with ID:', id);
+    
+    const organizer = await Organizer.findById(id)
       .select('-firebaseUid -lastLoginAt')
       .populate({
         path: 'events',
@@ -77,7 +88,17 @@ router.get('/:id', optionalAuth, async (req, res) => {
         options: { sort: { date: 1 }, limit: 10 }
       });
 
-    if (!organizer || !organizer.isActive) {
+    console.log('Found organizer:', organizer);
+
+    if (!organizer) {
+      return res.status(404).json({
+        success: false,
+        error: 'Organizer not found'
+      });
+    }
+
+    // Check if organizer is active (if the field exists)
+    if (organizer.isActive === false) {
       return res.status(404).json({
         success: false,
         error: 'Organizer not found'
@@ -99,6 +120,15 @@ router.get('/:id', optionalAuth, async (req, res) => {
 
   } catch (error) {
     console.error('Get organizer error:', error);
+    
+    // Handle specific MongoDB errors
+    if (error.name === 'CastError') {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid organizer ID format'
+      });
+    }
+    
     res.status(500).json({
       success: false,
       error: 'Failed to fetch organizer',
