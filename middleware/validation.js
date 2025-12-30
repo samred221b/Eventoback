@@ -72,6 +72,10 @@ const eventSchemas = {
       coordinates: Joi.object({
         lat: Joi.number().min(-90).max(90).required(),
         lng: Joi.number().min(-180).max(180).required()
+      }).required(),
+      geo: Joi.object({
+        type: Joi.string().valid('Point').default('Point'),
+        coordinates: Joi.array().items(Joi.number()).length(2).required()
       }).required()
     }).required(),
     date: Joi.date().min('now').required(),
@@ -106,6 +110,10 @@ const eventSchemas = {
       coordinates: Joi.object({
         lat: Joi.number().min(-90).max(90).optional(),
         lng: Joi.number().min(-180).max(180).optional()
+      }).optional(),
+      geo: Joi.object({
+        type: Joi.string().valid('Point').default('Point'),
+        coordinates: Joi.array().items(Joi.number()).length(2).optional()
       }).optional()
     }).optional(),
     date: Joi.date().min('now').optional(),
