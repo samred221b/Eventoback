@@ -1,6 +1,7 @@
 const express = require('express');
 const Banner = require('../models/Banner');
-const { authenticateToken, isAdmin } = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
+const { isAdmin } = require('../middleware/admin');
 
 const router = express.Router();
 
