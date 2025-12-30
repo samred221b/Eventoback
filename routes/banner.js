@@ -1,6 +1,6 @@
 const express = require('express');
 const Banner = require('../models/Banner');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken, isAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -21,8 +21,8 @@ router.get('/', async (req, res) => {
 
 // @route   GET /api/banners/all
 // @desc    Get all banners (active and inactive) sorted by order for management
-// @access  Private (auth required)
-router.get('/all', authenticateToken, async (req, res) => {
+// @access  Admin only
+router.get('/all', authenticateToken, isAdmin, async (req, res) => {
   try {
     const banners = await Banner.find({}).sort({ order: 1, createdAt: -1 });
     res.json({ success: true, data: banners });
@@ -34,8 +34,8 @@ router.get('/all', authenticateToken, async (req, res) => {
 
 // @route   POST /api/banners
 // @desc    Create a new banner
-// @access  Private (auth required)
-router.post('/', authenticateToken, async (req, res) => {
+// @access  Admin only
+router.post('/', authenticateToken, isAdmin, async (req, res) => {
   try {
     const { title, subtitle, imageUrl, actionType = 'none', actionTarget, order = 0, isActive = true } = req.body;
 
@@ -55,8 +55,8 @@ router.post('/', authenticateToken, async (req, res) => {
 
 // @route   PUT /api/banners/:id
 // @desc    Update a banner
-// @access  Private (auth required)
-router.put('/:id', authenticateToken, async (req, res) => {
+// @access  Admin only
+router.put('/:id', authenticateToken, isAdmin, async (req, res) => {
   try {
     const banner = await Banner.findById(req.params.id);
     if (!banner) {
@@ -75,8 +75,8 @@ router.put('/:id', authenticateToken, async (req, res) => {
 
 // @route   DELETE /api/banners/:id
 // @desc    Delete a banner
-// @access  Private (auth required)
-router.delete('/:id', authenticateToken, async (req, res) => {
+// @access  Admin only
+router.delete('/:id', authenticateToken, isAdmin, async (req, res) => {
   try {
     const banner = await Banner.findById(req.params.id);
     if (!banner) {

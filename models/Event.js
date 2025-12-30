@@ -43,7 +43,7 @@ const eventSchema = new mongoose.Schema({
     enum: [
       'music', 'culture', 'education', 'sports', 'art', 'business', 
       'food', 'technology', 'health', 'fashion', 'travel', 'photography', 
-      'gaming', 'automotive', 'charity', 'networking', 'workshop', 'conference'
+      'gaming', 'automotive', 'charity', 'networking', 'workshop', 'conference', 'religious'
     ]
   },
   
@@ -67,6 +67,7 @@ const eventSchema = new mongoose.Schema({
       maxlength: 50,
       trim: true
     },
+    // Legacy coordinates for backward compatibility
     coordinates: {
       lat: {
         type: Number,
@@ -79,6 +80,22 @@ const eventSchema = new mongoose.Schema({
         required: true,
         min: -180,
         max: 180
+      }
+    },
+    // GeoJSON point for geospatial queries
+    geo: {
+      type: { type: String, enum: ['Point'], default: 'Point' },
+      coordinates: { 
+        type: [Number], 
+        required: true,
+        validate: {
+          validator: function(coords) {
+            return coords.length === 2 && 
+                   coords[0] >= -180 && coords[0] <= 180 && // longitude
+                   coords[1] >= -90 && coords[1] <= 90;     // latitude
+          },
+          message: 'Invalid coordinates. Must be [longitude, latitude]'
+        }
       }
     }
   },
@@ -140,6 +157,27 @@ const eventSchema = new mongoose.Schema({
     default: 0
   },
   
+  // Additional pricing options (optional)
+  vipPrice: {
+    type: Number,
+    min: 0
+  },
+  
+  vvipPrice: {
+    type: Number,
+    min: 0
+  },
+  
+  onDoorPrice: {
+    type: Number,
+    min: 0
+  },
+  
+  earlyBirdPrice: {
+    type: Number,
+    min: 0
+  },
+  
   currency: {
     type: String,
     default: 'ETB',
@@ -158,6 +196,13 @@ const eventSchema = new mongoose.Schema({
     type: String,
     trim: true,
     maxlength: 500
+  },
+
+  // Tickets Available At (optional)
+  ticketsAvailableAt: {
+    type: String,
+    trim: true,
+    maxlength: 200
   },
   
   // Status
@@ -222,7 +267,7 @@ eventSchema.index({ date: 1 });
 eventSchema.index({ featured: 1 });
 eventSchema.index({ status: 1 });
 eventSchema.index({ 'location.city': 1 });
-eventSchema.index({ 'location.coordinates': '2dsphere' }); // For geospatial queries
+eventSchema.index({ 'location.geo': '2dsphere' }); // For geospatial queries
 eventSchema.index({ createdAt: -1 });
 eventSchema.index({ title: 'text', description: 'text' }); // For text search
 
@@ -246,9 +291,18 @@ eventSchema.virtual('isPast').get(function() {
   return this.date < new Date();
 });
 
-// Pre-save middleware
+// Pre-save middleware to sync coordinates
 eventSchema.pre('save', function(next) {
   this.updatedAt = Date.now();
+  
+  // Auto-populate geo field from coordinates if not set
+  if (this.location.coordinates && !this.location.geo.coordinates) {
+    this.location.geo = {
+      type: 'Point',
+      coordinates: [this.location.coordinates.lng, this.location.coordinates.lat]
+    };
+  }
+  
   next();
 });
 
@@ -288,7 +342,7 @@ eventSchema.methods.incrementViews = function() {
 // Static method to find nearby events
 eventSchema.statics.findNearby = function(lat, lng, maxDistance = 10000) {
   return this.find({
-    'location.coordinates': {
+    'location.geo': {
       $near: {
         $geometry: {
           type: 'Point',

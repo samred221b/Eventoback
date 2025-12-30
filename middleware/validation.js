@@ -63,7 +63,7 @@ const eventSchemas = {
     category: Joi.string().valid(
       'music', 'culture', 'education', 'sports', 'art', 'business', 
       'food', 'technology', 'health', 'fashion', 'travel', 'photography', 
-      'gaming', 'automotive', 'charity', 'networking', 'workshop', 'conference'
+      'gaming', 'automotive', 'charity', 'networking', 'workshop', 'conference', 'religious'
     ).required(),
     location: Joi.object({
       address: Joi.string().max(200).required(),
@@ -79,8 +79,13 @@ const eventSchemas = {
     featured: Joi.boolean().optional(),
     capacity: Joi.number().min(1).max(100000).optional(),
     price: Joi.number().min(0).optional(),
+    vipPrice: Joi.number().min(0).optional(),
+    vvipPrice: Joi.number().min(0).optional(),
+    onDoorPrice: Joi.number().min(0).optional(),
+    earlyBirdPrice: Joi.number().min(0).optional(),
     organizerName: Joi.string().min(2).max(100).required(),
     importantInfo: Joi.string().max(500).optional(),
+    ticketsAvailableAt: Joi.string().max(200).optional(),
     tags: Joi.array().items(Joi.string().max(30)).max(10).optional()
   }),
 
@@ -92,7 +97,7 @@ const eventSchemas = {
     category: Joi.string().valid(
       'music', 'culture', 'education', 'sports', 'art', 'business', 
       'food', 'technology', 'health', 'fashion', 'travel', 'photography', 
-      'gaming', 'automotive', 'charity', 'networking', 'workshop', 'conference'
+      'gaming', 'automotive', 'charity', 'networking', 'workshop', 'conference', 'religious'
     ).optional(),
     location: Joi.object({
       address: Joi.string().max(200).optional(),
@@ -108,8 +113,13 @@ const eventSchemas = {
     featured: Joi.boolean().optional(),
     capacity: Joi.number().min(1).max(100000).optional(),
     price: Joi.number().min(0).optional(),
+    vipPrice: Joi.number().min(0).optional(),
+    vvipPrice: Joi.number().min(0).optional(),
+    onDoorPrice: Joi.number().min(0).optional(),
+    earlyBirdPrice: Joi.number().min(0).optional(),
     organizerName: Joi.string().min(2).max(100).optional(),
     importantInfo: Joi.string().max(500).optional(),
+    ticketsAvailableAt: Joi.string().max(200).optional(),
     tags: Joi.array().items(Joi.string().max(30)).max(10).optional()
   })
 };

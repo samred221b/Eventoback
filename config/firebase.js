@@ -1,10 +1,5 @@
 const admin = require('firebase-admin');
 
-// Fix for self-signed certificate issues in development
-if (process.env.NODE_ENV !== 'production') {
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-}
-
 // Initialize Firebase Admin SDK
 const initializeFirebase = () => {
   try {

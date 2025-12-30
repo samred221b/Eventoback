@@ -115,6 +115,6 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Eventopia API server running on port ${PORT}`);
   console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🌐 Local: http://localhost:${PORT}/api/health`);
-  console.log(`🌐 Network: http://192.168.0.153:${PORT}/api/health`);
-  console.log(`📱 Mobile can connect to: http://192.168.1.4:${PORT}/api`);
+  console.log(`🌐 Network: http://192.168.1.6:${PORT}/api/health`);
+  console.log(`📱 Mobile can connect to: http://192.168.1.6:${PORT}/api`);
 });

@@ -103,7 +103,17 @@ router.post('/image', authenticateToken, upload.single('image'), async (req, res
 router.delete('/image/:filename', authenticateToken, async (req, res) => {
   try {
     const { filename } = req.params;
-    const filePath = path.join(uploadsDir, filename);
+    const safeFilename = path.basename(filename);
+    const filePath = path.join(uploadsDir, safeFilename);
+
+    // Verify the resolved path is within the uploads directory
+    if (!filePath.startsWith(path.resolve(uploadsDir))) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid filename',
+        message: 'Filename is not valid'
+      });
+    }
 
     // Check if file exists
     if (!fs.existsSync(filePath)) {
