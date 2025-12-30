@@ -93,12 +93,12 @@ const organizerSchema = new mongoose.Schema({
   
   // Profile Information
   profileImage: {
-    type: String, // URL to profile image
+    type: String, // URL to profile image or file URI
     validate: {
       validator: function(v) {
-        return !v || /^https?:\/\/.+/.test(v);
+        return !v || /^https?:\/\/.+/.test(v) || /^file:\/\//.test(v) || /^data:image\/.*/.test(v);
       },
-      message: 'Invalid image URL'
+      message: 'Invalid image format - must be URL, file URI, or data URI'
     }
   },
   

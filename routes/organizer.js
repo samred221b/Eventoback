@@ -131,7 +131,15 @@ router.put('/profile',
       if (req.body.name !== undefined) updates.name = req.body.name;
       if (req.body.bio !== undefined) updates.bio = req.body.bio;
       if (req.body.phone !== undefined) updates.phone = req.body.phone;
-      if (req.body.profileImage !== undefined) updates.profileImage = req.body.profileImage;
+      if (req.body.profileImage !== undefined) {
+        // Only update if it's a valid URL or empty string
+        if (!req.body.profileImage || /^https?:\/\/.+/.test(req.body.profileImage)) {
+          updates.profileImage = req.body.profileImage;
+        } else {
+          // If it's a file URI, skip updating (image should be uploaded first)
+          logger.warn('Skipping profileImage update - invalid URL format:', req.body.profileImage);
+        }
+      }
       if (req.body.organization !== undefined) updates.organization = req.body.organization;
       if (req.body.website !== undefined) updates.website = req.body.website;
       

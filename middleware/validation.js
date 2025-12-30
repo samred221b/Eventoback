@@ -41,7 +41,7 @@ const organizerSchemas = {
     name: Joi.string().min(2).max(100).optional(),
     bio: Joi.string().max(500).optional(),
     phone: Joi.string().pattern(/^[\+]?[1-9][\d]{0,15}$/).optional(),
-    profileImage: Joi.string().uri().optional(),
+    profileImage: Joi.string().optional().allow(''), // Accept both URLs and file URIs
     organization: Joi.string().max(100).optional(),
     website: Joi.string().uri().optional().allow(''),
     // Accept individual location fields for easier frontend integration
