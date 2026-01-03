@@ -591,4 +591,51 @@ router.get('/messages/history', authenticateToken, isAdmin, async (req, res) => 
   }
 });
 
+// @route   DELETE /api/admin/messages/:id
+// @desc    Delete a message from history
+// @access  Admin only
+router.delete('/messages/:id', authenticateToken, isAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Message ID is required',
+        message: 'Please provide a valid message ID'
+      });
+    }
+
+    // Find and delete the message
+    const deletedMessage = await Message.findByIdAndDelete(id);
+
+    if (!deletedMessage) {
+      return res.status(404).json({
+        success: false,
+        error: 'Message not found',
+        message: 'The message could not be found'
+      });
+    }
+
+    console.log(`Admin deleted message: ${id}`);
+
+    res.json({
+      success: true,
+      message: 'Message deleted successfully',
+      data: {
+        id: deletedMessage._id,
+        deletedAt: new Date()
+      }
+    });
+
+  } catch (error) {
+    console.error('Admin delete message error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to delete message',
+      message: error.message
+    });
+  }
+});
+
 module.exports = router;
