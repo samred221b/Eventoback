@@ -4,6 +4,7 @@ const { isAdmin } = require('../middleware/admin');
 const Event = require('../models/Event');
 const Organizer = require('../models/Organizer');
 const Message = require('../models/Message');
+const BroadcastNotification = require('../models/BroadcastNotification');
 
 const router = express.Router();
 
@@ -510,6 +511,17 @@ router.post('/messages/send', authenticateToken, isAdmin, async (req, res) => {
         email: req.user?.email || null,
       }
     });
+
+    if (normalizedType === 'broadcast') {
+      await BroadcastNotification.create({
+        title: title && typeof title === 'string' ? title.trim().slice(0, 120) : null,
+        message: message.trim(),
+        createdBy: {
+          uid: req.user?.uid || null,
+          email: req.user?.email || null,
+        },
+      });
+    }
 
     return res.json({
       success: true,
