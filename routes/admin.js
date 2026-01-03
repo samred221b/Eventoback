@@ -3,6 +3,7 @@ const { authenticateToken } = require('../middleware/auth');
 const { isAdmin } = require('../middleware/admin');
 const Event = require('../models/Event');
 const Organizer = require('../models/Organizer');
+const Message = require('../models/Message');
 
 const router = express.Router();
 
@@ -450,6 +451,129 @@ router.get('/analytics', authenticateToken, isAdmin, async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to fetch analytics',
+      message: error.message
+    });
+  }
+});
+
+// @route   POST /api/admin/messages/send
+// @desc    Send a message to organizers (broadcast or individual)
+// @access  Admin only
+router.post('/messages/send', authenticateToken, isAdmin, async (req, res) => {
+  try {
+    const { message, type, recipients, title } = req.body || {};
+
+    if (!message || typeof message !== 'string' || !message.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation error',
+        message: 'Message is required'
+      });
+    }
+
+    const normalizedType = type === 'broadcast' ? 'broadcast' : 'individual';
+
+    let organizerIds = [];
+    if (normalizedType === 'broadcast') {
+      const organizers = await Organizer.find({ isActive: true }).select('_id');
+      organizerIds = organizers.map(o => o._id);
+    } else {
+      if (!Array.isArray(recipients) || recipients.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'Validation error',
+          message: 'Recipients are required for individual messages'
+        });
+      }
+
+      organizerIds = recipients
+        .filter(Boolean)
+        .filter((id) => typeof id === 'string')
+        .filter((id) => id.match(/^[0-9a-fA-F]{24}$/));
+
+      if (organizerIds.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'Validation error',
+          message: 'No valid organizer recipient IDs provided'
+        });
+      }
+    }
+
+    const doc = await Message.create({
+      type: normalizedType,
+      title: title && typeof title === 'string' ? title.trim().slice(0, 120) : null,
+      message: message.trim(),
+      recipients: organizerIds.map((organizerId) => ({ organizerId })),
+      createdBy: {
+        uid: req.user?.uid || null,
+        email: req.user?.email || null,
+      }
+    });
+
+    return res.json({
+      success: true,
+      message: 'Message sent successfully',
+      data: {
+        id: doc._id,
+        type: doc.type,
+        createdAt: doc.createdAt,
+        recipientsCount: doc.recipients.length,
+      }
+    });
+  } catch (error) {
+    console.error('Admin send message error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to send message',
+      message: error.message
+    });
+  }
+});
+
+// @route   GET /api/admin/messages/history
+// @desc    Get message history (admin)
+// @access  Admin only
+router.get('/messages/history', authenticateToken, isAdmin, async (req, res) => {
+  try {
+    const { page = 1, limit = 50 } = req.query;
+
+    const safeLimit = Math.min(parseInt(limit) || 50, 100);
+    const safePage = Math.max(parseInt(page) || 1, 1);
+
+    const docs = await Message.find({})
+      .sort({ createdAt: -1 })
+      .limit(safeLimit)
+      .skip((safePage - 1) * safeLimit);
+
+    const total = await Message.countDocuments({});
+
+    const data = docs.map((doc) => ({
+      id: doc._id,
+      type: doc.type,
+      title: doc.title,
+      message: doc.message,
+      createdAt: doc.createdAt,
+      status: 'delivered',
+      recipients: (doc.recipients || []).map((r) => String(r.organizerId)),
+      recipientsCount: (doc.recipients || []).length,
+      readCount: (doc.recipients || []).filter((r) => r.read).length,
+    }));
+
+    return res.json({
+      success: true,
+      data,
+      pagination: {
+        current: safePage,
+        pages: Math.ceil(total / safeLimit),
+        total,
+      }
+    });
+  } catch (error) {
+    console.error('Admin message history error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to fetch message history',
       message: error.message
     });
   }

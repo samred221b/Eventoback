@@ -15,6 +15,7 @@ const authRoutes = require('./routes/auth');
 const uploadRoutes = require('./routes/upload');
 const bannerRoutes = require('./routes/banner');
 const adminRoutes = require('./routes/admin');
+const organizerMessagesRoutes = require('./routes/organizerMessages');
 
 // Import middleware
 const errorHandler = require('./middleware/errorHandler');
@@ -70,6 +71,7 @@ connectDB();
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/organizers', organizerRoutes);
+app.use('/api/organizer', organizerMessagesRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/banners', bannerRoutes);
