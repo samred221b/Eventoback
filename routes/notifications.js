@@ -143,4 +143,54 @@ router.post('/:id/read', authenticateToken, async (req, res) => {
   }
 });
 
+// @route   POST /api/notifications/read-all
+// @desc    Mark all broadcast notifications as read for current user
+// @access  Private
+router.post('/read-all', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user?.uid;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Access denied',
+        message: 'Not authenticated',
+      });
+    }
+
+    // Get all notification IDs
+    const notifications = await BroadcastNotification.find({}).select('_id');
+    const notificationIds = notifications.map(n => n._id);
+
+    if (notificationIds.length === 0) {
+      return res.json({
+        success: true,
+        message: 'No notifications to mark as read',
+      });
+    }
+
+    // Mark all notifications as read for this user
+    const bulkOps = notificationIds.map(notificationId => ({
+      updateOne: {
+        filter: { notificationId, userId },
+        update: { $set: { readAt: new Date() } },
+        upsert: true,
+      },
+    }));
+
+    await NotificationReceipt.bulkWrite(bulkOps);
+
+    return res.json({
+      success: true,
+      message: 'All notifications marked as read',
+    });
+  } catch (error) {
+    console.error('Mark all notifications read error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to mark all notifications as read',
+      message: error.message,
+    });
+  }
+});
+
 module.exports = router;
