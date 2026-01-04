@@ -24,7 +24,7 @@ const messageSchema = new mongoose.Schema(
   {
     type: {
       type: String,
-      enum: ['broadcast', 'individual'],
+      enum: ['broadcast', 'individual', 'admin'],
       required: true,
       index: true,
     },
@@ -47,6 +47,10 @@ const messageSchema = new mongoose.Schema(
     createdBy: {
       uid: { type: String, default: null },
       email: { type: String, default: null },
+    },
+    metadata: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
     },
   },
   {

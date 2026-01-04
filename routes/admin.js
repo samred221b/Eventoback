@@ -570,6 +570,7 @@ router.get('/messages/history', authenticateToken, isAdmin, async (req, res) => 
       recipients: (doc.recipients || []).map((r) => String(r.organizerId)),
       recipientsCount: (doc.recipients || []).length,
       readCount: (doc.recipients || []).filter((r) => r.read).length,
+      metadata: doc.metadata || null,
     }));
 
     return res.json({

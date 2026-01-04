@@ -17,6 +17,7 @@ const bannerRoutes = require('./routes/banner');
 const adminRoutes = require('./routes/admin');
 const organizerMessagesRoutes = require('./routes/organizerMessages');
 const notificationsRoutes = require('./routes/notifications');
+const supportRoutes = require('./routes/support');
 
 // Import middleware
 const errorHandler = require('./middleware/errorHandler');
@@ -78,6 +79,7 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/banners', bannerRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationsRoutes);
+app.use('/api/support', supportRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
