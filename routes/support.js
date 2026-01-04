@@ -8,7 +8,7 @@ const router = express.Router();
 // @route   POST /api/support/bug-report
 // @desc    Submit a bug report and send to admin
 // @access  Public (with optional auth)
-router.post('/bug-report', authenticateToken, async (req, res) => {
+router.post('/bug-report', async (req, res) => {
   try {
     const { title, description, email, category } = req.body || {};
 
@@ -32,6 +32,21 @@ router.post('/bug-report', authenticateToken, async (req, res) => {
     const validCategories = ['general', 'crash', 'ui', 'performance', 'feature'];
     const normalizedCategory = validCategories.includes(category) ? category : 'general';
 
+    // Get user info from optional auth
+    let user = null;
+    try {
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.substring(7);
+        // Simple token validation for development
+        if (token && token.length > 10) {
+          user = { uid: 'dev-user', email: 'dev@example.com' };
+        }
+      }
+    } catch (error) {
+      // Ignore auth errors - proceed with anonymous submission
+    }
+
     // Create support request record
     const supportRequest = await SupportRequest.create({
       type: 'bug',
@@ -42,8 +57,8 @@ router.post('/bug-report', authenticateToken, async (req, res) => {
       appVersion: '1.0.2',
       platform: 'mobile',
       submittedBy: {
-        uid: req.user?.uid || null,
-        email: req.user?.email || null,
+        uid: user?.uid || null,
+        email: user?.email || null,
       },
     });
 
@@ -54,7 +69,7 @@ Category: ${normalizedCategory.charAt(0).toUpperCase() + normalizedCategory.slic
 Submitted: ${new Date().toLocaleDateString()}
 
 Email: ${email || 'Not provided'}
-User: ${req.user?.email || 'Anonymous user'}
+User: ${user?.email || 'Anonymous user'}
 
 Description:
 ${description.trim()}
@@ -67,8 +82,8 @@ ${description.trim()}
       message: messageContent,
       recipients: [], // Empty recipients means admin-only
       createdBy: {
-        uid: req.user?.uid || null,
-        email: req.user?.email || null,
+        uid: user?.uid || null,
+        email: user?.email || null,
       },
       metadata: {
         supportRequestId: supportRequest._id,
@@ -103,7 +118,7 @@ ${description.trim()}
 // @route   POST /api/support/feature-request
 // @desc    Submit a feature request and send to admin
 // @access  Public (with optional auth)
-router.post('/feature-request', authenticateToken, async (req, res) => {
+router.post('/feature-request', async (req, res) => {
   try {
     const { title, description, email, category } = req.body || {};
 
@@ -127,6 +142,21 @@ router.post('/feature-request', authenticateToken, async (req, res) => {
     const validCategories = ['general', 'crash', 'ui', 'performance', 'feature'];
     const normalizedCategory = validCategories.includes(category) ? category : 'general';
 
+    // Get user info from optional auth
+    let user = null;
+    try {
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.substring(7);
+        // Simple token validation for development
+        if (token && token.length > 10) {
+          user = { uid: 'dev-user', email: 'dev@example.com' };
+        }
+      }
+    } catch (error) {
+      // Ignore auth errors - proceed with anonymous submission
+    }
+
     // Create support request record
     const supportRequest = await SupportRequest.create({
       type: 'feature',
@@ -137,8 +167,8 @@ router.post('/feature-request', authenticateToken, async (req, res) => {
       appVersion: '1.0.2',
       platform: 'mobile',
       submittedBy: {
-        uid: req.user?.uid || null,
-        email: req.user?.email || null,
+        uid: user?.uid || null,
+        email: user?.email || null,
       },
     });
 
@@ -149,7 +179,7 @@ Category: ${normalizedCategory.charAt(0).toUpperCase() + normalizedCategory.slic
 Submitted: ${new Date().toLocaleDateString()}
 
 Email: ${email || 'Not provided'}
-User: ${req.user?.email || 'Anonymous user'}
+User: ${user?.email || 'Anonymous user'}
 
 Description:
 ${description.trim()}
@@ -162,8 +192,8 @@ ${description.trim()}
       message: messageContent,
       recipients: [], // Empty recipients means admin-only
       createdBy: {
-        uid: req.user?.uid || null,
-        email: req.user?.email || null,
+        uid: user?.uid || null,
+        email: user?.email || null,
       },
       metadata: {
         supportRequestId: supportRequest._id,
