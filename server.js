@@ -25,6 +25,9 @@ const errorHandler = require('./middleware/errorHandler');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust reverse proxy (Render/NGINX) so req.protocol and req.ip are correct
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet());
 

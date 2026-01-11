@@ -57,10 +57,11 @@ router.post('/image', authenticateToken, upload.single('image'), async (req, res
       });
     }
 
-    // Get the server's IP address for the image URL
+    const publicBaseUrl = process.env.PUBLIC_BASE_URL;
     const protocol = req.protocol;
     const host = req.get('host');
-    const imageUrl = `${protocol}://${host}/uploads/${req.file.filename}`;
+    const baseUrl = publicBaseUrl || `${protocol}://${host}`;
+    const imageUrl = `${baseUrl}/uploads/${req.file.filename}`;
 
     console.log('✅ Image uploaded successfully:', {
       filename: req.file.filename,
