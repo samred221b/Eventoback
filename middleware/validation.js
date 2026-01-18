@@ -67,6 +67,7 @@ const eventSchemas = {
     title: Joi.string().min(3).max(200).required(),
     description: Joi.string().min(10).max(2000).required(),
     image: Joi.string().uri().optional(),
+    images: Joi.array().items(Joi.string().uri()).max(5).optional(),
     mode: Joi.string().valid('In-person', 'Online').required(),
     category: Joi.string().valid(
       'music', 'culture', 'education', 'sports', 'art', 'business', 
@@ -105,6 +106,7 @@ const eventSchemas = {
     title: Joi.string().min(3).max(200).optional(),
     description: Joi.string().min(10).max(2000).optional(),
     image: Joi.string().uri().optional(),
+    images: Joi.array().items(Joi.string().uri()).max(5).optional(),
     mode: Joi.string().valid('In-person', 'Online').optional(),
     category: Joi.string().valid(
       'music', 'culture', 'education', 'sports', 'art', 'business', 

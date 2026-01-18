@@ -26,6 +26,16 @@ const eventSchema = new mongoose.Schema({
       message: 'Invalid image URL'
     }
   },
+
+  images: [{
+    type: String,
+    validate: {
+      validator: function(v) {
+        return !v || /^(https?|file|data):\/\/.+/.test(v);
+      },
+      message: 'Invalid image URL'
+    }
+  }],
   
   // Mode (Online/In-person)
   mode: {
