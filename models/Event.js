@@ -121,6 +121,18 @@ const eventSchema = new mongoose.Schema({
       message: 'Event date must be in the future'
     }
   },
+
+  endDate: {
+    type: Date,
+    validate: {
+      validator: function(v) {
+        if (!v) return true;
+        if (!(this.date instanceof Date) || isNaN(this.date.getTime())) return false;
+        return v >= this.date;
+      },
+      message: 'End date cannot be before start date'
+    }
+  },
   
   time: {
     type: String,
@@ -130,6 +142,17 @@ const eventSchema = new mongoose.Schema({
         return /^(0[1-9]|1[0-2]):[0-5][0-9] ?(AM|PM)$/i.test(v);
       },
       message: 'Time must be in hh:mm AM/PM format'
+    }
+  },
+
+  endTime: {
+    type: String,
+    validate: {
+      validator: function(v) {
+        if (!v) return true;
+        return /^(0[1-9]|1[0-2]):[0-5][0-9] ?(AM|PM)$/i.test(v);
+      },
+      message: 'End time must be in hh:mm AM/PM format'
     }
   },
   
@@ -168,22 +191,72 @@ const eventSchema = new mongoose.Schema({
   },
   
   // Additional pricing options (optional)
+  vipTitle: {
+    type: String,
+    trim: true,
+    maxlength: 40
+  },
   vipPrice: {
     type: Number,
     min: 0
   },
   
+  vvipTitle: {
+    type: String,
+    trim: true,
+    maxlength: 40
+  },
   vvipPrice: {
     type: Number,
     min: 0
   },
   
+  onDoorTitle: {
+    type: String,
+    trim: true,
+    maxlength: 40
+  },
   onDoorPrice: {
     type: Number,
     min: 0
   },
   
+  earlyBirdTitle: {
+    type: String,
+    trim: true,
+    maxlength: 40
+  },
   earlyBirdPrice: {
+    type: Number,
+    min: 0
+  },
+
+  extra1Title: {
+    type: String,
+    trim: true,
+    maxlength: 40
+  },
+  extra1Price: {
+    type: Number,
+    min: 0
+  },
+
+  extra2Title: {
+    type: String,
+    trim: true,
+    maxlength: 40
+  },
+  extra2Price: {
+    type: Number,
+    min: 0
+  },
+
+  extra3Title: {
+    type: String,
+    trim: true,
+    maxlength: 40
+  },
+  extra3Price: {
     type: Number,
     min: 0
   },

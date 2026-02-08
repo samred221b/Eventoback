@@ -173,6 +173,24 @@ router.put('/profile',
       if (req.body.organization !== undefined) updates.organization = req.body.organization;
       if (req.body.website !== undefined) updates.website = req.body.website;
       
+      // Social media fields
+      if (req.body.facebook !== undefined) {
+        updates.socialLinks = organizer.socialLinks || {};
+        updates.socialLinks.facebook = req.body.facebook;
+      }
+      if (req.body.instagram !== undefined) {
+        updates.socialLinks = updates.socialLinks || organizer.socialLinks || {};
+        updates.socialLinks.instagram = req.body.instagram;
+      }
+      if (req.body.telegram !== undefined) {
+        updates.socialLinks = updates.socialLinks || organizer.socialLinks || {};
+        updates.socialLinks.telegram = req.body.telegram;
+      }
+      if (req.body.tiktok !== undefined) {
+        updates.socialLinks = updates.socialLinks || organizer.socialLinks || {};
+        updates.socialLinks.tiktok = req.body.tiktok;
+      }
+      
       // Explicitly ignore email field - it's managed by Firebase
       delete req.body.email;
 

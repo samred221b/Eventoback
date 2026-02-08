@@ -133,7 +133,9 @@ const organizerSchema = new mongoose.Schema({
     facebook: String,
     twitter: String,
     instagram: String,
-    linkedin: String
+    linkedin: String,
+    telegram: String,
+    tiktok: String
   },
   
   // Timestamps

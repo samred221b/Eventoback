@@ -58,7 +58,10 @@ router.post('/image', authenticateToken, upload.single('image'), async (req, res
     }
 
     const publicBaseUrl = process.env.PUBLIC_BASE_URL;
-    const protocol = req.protocol;
+    const forwardedProto = req.headers['x-forwarded-proto'];
+    const protocol = (typeof forwardedProto === 'string' && forwardedProto.length > 0)
+      ? forwardedProto.split(',')[0].trim()
+      : req.protocol;
     const host = req.get('host');
     const baseUrl = publicBaseUrl || `${protocol}://${host}`;
     const imageUrl = `${baseUrl}/uploads/${req.file.filename}`;
